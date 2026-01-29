@@ -9,6 +9,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { User } from './modules/user/entity/user.entity';
 import { TypeOrmOptionsFactory } from '@nestjs/typeorm';
 import { UserModule } from './modules/user/user.module';
+// import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [TypeOrmModule.forRootAsync({
@@ -16,6 +17,12 @@ import { UserModule } from './modules/user/user.module';
     }),
     EmployeeModule,
     UserModule],
+  })
+
+
+
+@Module({
+  imports: [TypeOrmModule.forRootAsync({useClass: TypeOrmConfigService}), UserModule],
   controllers: [AppController],
   providers: [AppService],
 })
