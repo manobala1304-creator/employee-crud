@@ -12,6 +12,13 @@ export class User{
     @Column({unique:true})
     email:string;
 
-    @Column()
-    password:string;
+   @Column({
+  type: 'varchar',
+  length: 255,
+  nullable: true, //  OAuth users won’t have passwords
+})
+password: string | null;
+
+
 }
+
