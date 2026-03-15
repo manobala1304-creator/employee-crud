@@ -18,4 +18,8 @@ export class CreateEmployeeDto {
 
   @IsNumber()
   Supid: number;
+
+  @IsNumber()
+  employeeWorkId:number;
+
 }

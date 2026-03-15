@@ -1,4 +1,5 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsEmail, IsInt, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateSupervisorDto {
   @IsString()
@@ -11,5 +12,11 @@ export class CreateSupervisorDto {
   @IsString()
   @IsNotEmpty()
   designation: string;
+
+ @Type(() => Number)
+ @IsInt()
+ managerId: number;
+
+
 }
 

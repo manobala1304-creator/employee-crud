@@ -2,12 +2,14 @@ import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { AuthGuard } from '@nestjs/passport';
+import { AuthentikAuthGuard } from './guards/authentik-auth.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
     // local login 
-    @UseGuards(LocalAuthGuard)
+   @UseGuards(LocalAuthGuard)
 @Post('login')
 login(@Req() req) {
   return this.authService.generateJwt(req.user);
@@ -25,5 +27,16 @@ login(@Req() req) {
   async googleCallback(@Req() req) {
     return this.authService.generateJwt(req.user); // req.user comes from GoogleStrategy.validate()
   }
+ 
+  // authentik login & callback
+@Get('login')
+  @UseGuards(AuthentikAuthGuard)
+  async Login() {}
+
+  @Get('callback')
+  @UseGuards(AuthentikAuthGuard)
+  async callback(@Req() req) {
+  return this.authService.generateJwt(req.user);
+}
 
 }

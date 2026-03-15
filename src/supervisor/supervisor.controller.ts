@@ -1,11 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Put } from '@nestjs/common';
 import { SupervisorService } from './supervisor.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateSupervisorDto } from './dto/create-supervisor.dto';
 import { UpdateSupervisorDto } from './dto/update-supervisor.dto';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Role } from 'src/auth/enums/role.enum';
 
 @Controller('supervisors')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard,RolesGuard)
+@Roles(Role.ADMIN,Role.MANAGER)
 export class SupervisorController {
   constructor(private readonly supervisorService: SupervisorService) {}
 
@@ -14,12 +18,12 @@ createSupervisor(@Body() body: CreateSupervisorDto) {
   return this.supervisorService.create(body);
 }
 
- @Patch(':id')
-updateSupervisor(
+ @Put(':id/manager')
+updateManager(
   @Param('id') id: number,
-  @Body() body: UpdateSupervisorDto,
+  @Body('managerId') managerId: number
 ) {
-  return this.supervisorService.update(id, body);
+  return this.supervisorService.updateManager(id, managerId);
 }
 
 
@@ -28,14 +32,8 @@ getAllSupervisors() {
   return this.supervisorService.getAllSupervisors();
 }
 
-@Get(':id')
-getsupid(@Param('id') id:number){
-  return this.supervisorService.getsupid(id);
+@Delete(':id')
+remove(@Param('id') id: number) {
+  return this.supervisorService.remove(id);
 }
-
-
-  @Delete(':id')
-  deleteSupervisor(@Param('id') id: number) {
-    return this.supervisorService.remove(id);
-  }
 }

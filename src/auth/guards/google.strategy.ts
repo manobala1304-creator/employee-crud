@@ -10,7 +10,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     super({
       clientID: oauthConstants.googleClientId,
       clientSecret: oauthConstants.googleClientSecret,
-      callbackURL: oauthConstants.googleCallbackURL,
+      callbackURL: oauthConstants.googleCallbackUrl,
       scope: ['email', 'profile'],
     });
   }
@@ -31,6 +31,6 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     // Find or create user in DB
     const user = await this.authService.validateOAuthUser(email, name);
 
-    return user; // becomes req.user
+    return user; // it will becomes req.user
   }
 }

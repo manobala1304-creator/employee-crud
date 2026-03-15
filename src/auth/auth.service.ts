@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/user/entities/user.entity';
+import { Role, User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
@@ -12,33 +12,33 @@ export class AuthService {
     private userRepository: Repository<User>,
     private jwtService: JwtService,
   ) {}
-
+   // validate the user
   async validationUser(email: string, password: string) {
-    // STEP 1  Find user by email in database
+    // Find user by email in database 
     const user = await this.userRepository.findOne({
       where: { email },
     });
 
-    // STEP 2  If user not found, stop login
+    //  If user not found, stop login
     if (!user || !user.password) {
       return null;
     }
 
-    // STEP 3  Compare entered password with hashed password
+    // Compare entered password with hashed password
     const isPasswordValid = await bcrypt.compare(
       password,
       user.password,
     );
 
-    // STEP 4  If password is wrong, stop login
+    // If password is wrong, stop login
     if (!isPasswordValid) {
       return null;
     }
 
-    // STEP 5  Remove password before returning user
+    // Remove password before returning user
     const { password: _, ...result } = user;
 
-    // STEP 6 Return user (goes to req.user)
+    // Return user (goes to req.user)
     return result;
   }
 
@@ -47,9 +47,10 @@ export class AuthService {
   let user = await this.userRepository.findOne({ where: { email } });
 
   if (!user) {
-    user = this.userRepository.create({
+    user = this.userRepository.create({ 
       email,
       name,
+      role:Role.EMPLOYEE,  // DEFAULT ROLE
       
     });
     await this.userRepository.save(user);
@@ -60,16 +61,47 @@ export class AuthService {
    
    // JWT TOKEN CREATION
 
-  async generateJwt(user: any) {
-    const payload = {
-      email: user.email,
-      sub: user.id,
-    };
+ async generateJwt(authUser: any) {
 
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
-  }
+ const email =
+   authUser?.profile?.email ||
+   authUser?.profile?._json?.email;
+
+ const name =
+   authUser?.profile?.name ||
+   authUser?.profile?._json?.name;
+
+ let user = await this.userRepository.findOne({
+   where: { email: email }
+ });
+
+ if (!user) {
+
+   user = this.userRepository.create({
+     email: email,
+     name: name,
+     role: Role.EMPLOYEE
+   });
+
+   await this.userRepository.save(user);
+ }
+
+ const payload = {
+   sub: user.id,
+   email: user.email,
+   role: user.role
+ };
+
+ const token = this.jwtService.sign(payload);
+
+ const { password, ...safeUser } = user;
+
+ return {
+   message: "Login successful",
+   token,
+   user: safeUser
+ };
+}
 }
 
 
