@@ -6,8 +6,10 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from 'src/auth/enums/role.enum';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('employee-work')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard,RolesGuard)
 @Roles(Role.ADMIN,Role.MANAGER,Role.SUPERVISOR)
 

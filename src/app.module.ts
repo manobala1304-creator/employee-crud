@@ -12,6 +12,7 @@ import { SupervisorModule } from './supervisor/supervisor.module';
 import { ManagerModule } from './manager/manager.module';
 import { EmployeeWorkModule } from './employee-work/employee-work.module';
 import { ConfigModule } from '@nestjs/config';
+import { UploadModule } from './upload/upload.module';
 @Module({
   imports: [ ConfigModule.forRoot({
       isGlobal: true,
@@ -25,7 +26,8 @@ import { ConfigModule } from '@nestjs/config';
     EmployeeModule,
     SupervisorModule,
     ManagerModule,
-    EmployeeWorkModule
+    EmployeeWorkModule,
+    UploadModule
   ],
 
   controllers: [AppController],

@@ -1,3 +1,4 @@
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateEmployeeDto {
@@ -22,4 +23,8 @@ export class CreateEmployeeDto {
   @IsNumber()
   employeeWorkId:number;
 
+  // for swagger UI
+  @ApiPropertyOptional({ type: 'string', format: 'binary' })
+  profileImage?: any;
+  
 }

@@ -1,17 +1,15 @@
 import { Delete, Injectable, NotFoundException, Param, Post, UseGuards } from '@nestjs/common';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
-//import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { Employee } from './entities/employee.entity';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
-//import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { Supervisor } from 'src/supervisor/entities/supervisor.entity';
 import { Manager } from 'src/manager/entities/manager.entity';
 import { EmployeeWork } from 'src/employee-work/entities/employee-work.entity';
-import e from 'express';
-import { title } from 'process';
-import { promises } from 'dns';
+import * as fs from 'fs';
+import * as path from 'path';
+
 
 @Injectable()
 export class EmployeeService {
@@ -55,6 +53,18 @@ const employee = this.employeeRepo.create({
 
 return await this.employeeRepo.save(employee);
 
+}
+
+async uploadProfile(id: number, file: Express.Multer.File) {
+  const employee = await this.employeeRepo.findOne({ where: { id } });
+
+  if (!employee) {
+    throw new NotFoundException('Employee not found');
+  }
+
+  employee.profileImage = file.filename;
+
+  return this.employeeRepo.save(employee);
 }
 
 async getEmployeeById(id: number) {
@@ -105,6 +115,41 @@ return {
 };
 
 }
+async update(id: number, dto: UpdateEmployeeDto, file: Express.Multer.File) {
+
+  const employee = await this.employeeRepo.findOne({
+    where: { id },
+  });
+
+  if (!employee) {
+    throw new Error('Employee not found');
+  }
+
+  //  Delete old image
+  if (file && employee.profileImage) {
+    const oldPath = path.join(
+      __dirname,
+      '..',
+      '..',
+      'uploads',
+      employee.profileImage,
+    );
+
+    if (fs.existsSync(oldPath)) {
+      fs.unlinkSync(oldPath);
+    }
+  }
+
+  // Save new image
+  if (file) {
+    employee.profileImage = file.filename;
+  }
+
+  // Update other fields
+  Object.assign(employee, dto);
+
+  return await this.employeeRepo.save(employee);
+}
 
 
 async updateEmployee(id: number, body: UpdateEmployeeDto) {
@@ -151,46 +196,73 @@ async updateEmployee(id: number, body: UpdateEmployeeDto) {
 }
 
 
-async findAllEmployees() {
+async findAllEmployees(page: number = 1, limit: number = 5, search?: string) {
+  page = Number(page) || 1;
+  limit = Number(limit) || 5;
 
-const employees = await this.employeeRepo.find({
-  relations: [
-    'supervisor',
-    'supervisor.manager',
-    'employeeWork'
-  ]
-});
+  const skip = (page - 1) * limit;
 
-return employees.map(emp => ({
-  id: emp.id,
-  name: emp.firstname,
-  department: emp.department,
+  //  FETCH WITH PAGINATION
+  const [employees, total] = await this.employeeRepo.findAndCount({
+    relations: [
+      'supervisor',
+      'supervisor.manager',
+      'employeeWork',
+    ],
+    where: search
+      ? [
+          { firstname: Like(`%${search}%`) },
+          { email: Like(`%${search}%`) },
+        ]
+      : {},
+    skip: skip,
+    take: limit,
+  });
 
-  employee_work: emp.employeeWork
-    ? {
-        id: emp.employeeWork.id,
-        title: emp.employeeWork.title,
-        status: emp.employeeWork.status
-      }
-    : null,
+  // YOUR EXISTING MAP 
+  const data = employees.map((emp) => ({
+    id: emp.id,
+    name: emp.firstname,
+    department: emp.department,
 
-  supervisor: emp.supervisor
-    ? {
-        id: emp.supervisor.id,
-        name: emp.supervisor.name,
-        designation: emp.supervisor.designation
-      }
-    : null,
+    profileImageUrl: emp.profileImage
+      ? `http://localhost:3004/uploads/${emp.profileImage}`
+      : null,
 
-  manager: emp.supervisor?.manager
-    ? {
-        id: emp.supervisor.manager.id,
-        name: emp.supervisor.manager.name,
-        department: emp.supervisor.manager.department
-      }
-    : null
-}));
+    employee_work: emp.employeeWork
+      ? {
+          id: emp.employeeWork.id,
+          title: emp.employeeWork.title,
+          status: emp.employeeWork.status,
+        }
+      : null,
 
+    supervisor: emp.supervisor
+      ? {
+          id: emp.supervisor.id,
+          name: emp.supervisor.name,
+          designation: emp.supervisor.designation,
+        }
+      : null,
+
+    manager: emp.supervisor?.manager
+      ? {
+          id: emp.supervisor.manager.id,
+          name: emp.supervisor.manager.name,
+          department: emp.supervisor.manager.department,
+        }
+      : null,
+  }));
+
+  //  RESPONSE
+  return {
+    success: true,
+    message: 'Employees fetched successfully',
+    total,
+    page,
+    limit,
+    data,
+  };
 }
 
 

@@ -20,9 +20,10 @@ export class Employee  extends BaseEntity{
   @Column()
   department: string;
 
+  @Column({ nullable: true })
+  profileImage: string;
+
   
-
-
   //FOREIGN KEY 
   @ManyToOne(()=> Supervisor, supervisor=> supervisor.employees)
  @JoinColumn({ name: 'Supid' })   // FK column name

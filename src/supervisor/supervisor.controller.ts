@@ -6,8 +6,10 @@ import { UpdateSupervisorDto } from './dto/update-supervisor.dto';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from 'src/auth/enums/role.enum';
+import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('supervisors')
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard,RolesGuard)
 @Roles(Role.ADMIN,Role.MANAGER)
 export class SupervisorController {

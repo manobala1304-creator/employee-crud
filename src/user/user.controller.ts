@@ -21,7 +21,7 @@ export class UserController {
     return this.userService.findAll()
   } 
 
-  
+@ApiBearerAuth()
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN)   //  Only admin can change roles
 @Patch(':id/role')
@@ -43,7 +43,8 @@ updateRole(
   update(@Param('id') id: number, @Body() dto: UpdateUserDto) {
     return this.userService.update(id, dto);
   }
-
+  
+@ApiBearerAuth()
  @UseGuards(JwtAuthGuard,RolesGuard)
  @Roles(Role.ADMIN)
   @Delete(':id')
